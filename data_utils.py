@@ -1,9 +1,12 @@
-from sqlalchemy import create_engine,inspect
+from sqlalchemy import create_engine, inspect
 from sqlalchemy.exc import SQLAlchemyError
 import yaml
 import os
 
 class DatabaseConnector:
+    def __init__(self):
+        self.engine = None  # Initialize the engine as None
+
     def read_db_creds(self, filename):
         # Construct the full path for the file
         filepath = os.path.join(os.getcwd(), f'{filename}')
@@ -45,14 +48,14 @@ class DatabaseConnector:
             # Construct the database URL for SQLAlchemy
             db_url = f"postgresql://{creds['RDS_USER']}:{creds['RDS_PASSWORD']}@{creds['RDS_HOST']}:{creds['RDS_PORT']}/{creds['RDS_DATABASE']}"
             
-            # Create the SQLAlchemy engine
-            engine = create_engine(db_url)
+            # Create the SQLAlchemy engine and store it in the instance
+            self.engine = create_engine(db_url)
             
             # Try to connect to check if the engine is valid
-            connection = engine.connect()
+            connection = self.engine.connect()
             connection.close()
             
-            return engine
+            return self.engine
         
         except SQLAlchemyError as e:
             print(f"Error initializing database engine: {e}")
@@ -81,20 +84,29 @@ class DatabaseConnector:
             print(f"An unexpected error occurred: {e}")
             return None
     
-    def upload_to_db(self, df, table_name):
+    def upload_to_db(self, df, table_name, engine=None):
         """
         Uploads a Pandas DataFrame to the specified table in the database.
 
         Args:
         df (pd.DataFrame): The data to upload.
         table_name (str): The name of the table to upload the data to.
+        engine (sqlalchemy.engine.base.Engine): The SQLAlchemy engine. Defaults to the stored engine.
 
         Returns:
         bool: True if upload is successful, False otherwise.
         """
+        # Use the provided engine or the instance's engine if available
+        if engine is None:
+            engine = self.engine
+
+        if engine is None:
+            print("Error: No database engine available for uploading.")
+            return False
+        
         try:
             # Upload the DataFrame to the specified table in the database
-            df.to_sql(table_name, con=self.engine, if_exists='append', index=False)
+            df.to_sql(table_name, con=engine, if_exists='append', index=False)
             print(f"Data successfully uploaded to the '{table_name}' table.")
             return True
         
