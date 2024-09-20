@@ -6,7 +6,7 @@ import os
 class DatabaseConnector:
     def read_db_creds(self, filename):
         # Construct the full path for the file
-        filepath = os.path.join(os.getcwd(), f'{filename}.yaml')
+        filepath = os.path.join(os.getcwd(), f'{filename}')
         
         try:
             # Open the YAML file and load its contents
@@ -80,4 +80,28 @@ class DatabaseConnector:
         except Exception as e:
             print(f"An unexpected error occurred: {e}")
             return None
+    
+    def upload_to_db(self, df, table_name):
+        """
+        Uploads a Pandas DataFrame to the specified table in the database.
+
+        Args:
+        df (pd.DataFrame): The data to upload.
+        table_name (str): The name of the table to upload the data to.
+
+        Returns:
+        bool: True if upload is successful, False otherwise.
+        """
+        try:
+            # Upload the DataFrame to the specified table in the database
+            df.to_sql(table_name, con=self.engine, if_exists='append', index=False)
+            print(f"Data successfully uploaded to the '{table_name}' table.")
+            return True
         
+        except SQLAlchemyError as e:
+            print(f"Error while uploading data to table {table_name}: {e}")
+            return False
+        
+        except Exception as e:
+            print(f"An unexpected error occurred: {e}")
+            return False
