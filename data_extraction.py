@@ -1,8 +1,11 @@
 import pandas as pd
 from sqlalchemy.exc import SQLAlchemyError
+import tabula
+
+pdf_link = 'https://data-handling-public.s3.eu-west-1.amazonaws.com/card_details.pdf'
 
 class DataExtractor:
-    def __init__(self, engine):
+    def __init__(self, engine=None):
         self.engine = engine
 
     def read_table_data(self, table_name):
@@ -46,3 +49,22 @@ class DataExtractor:
         except Exception as e:
             print(f"An error occurred while extracting data: {e}")
             return None
+    
+    def read_pdf_data(self,link):
+        # Extract tables from the PDF
+        try:
+            # Extract all tables from the PDF into a list of DataFrames
+            dfs = tabula.read_pdf(pdf_link, pages='all', multiple_tables=True)
+
+            # Concatenate all DataFrames if there are multiple tables
+            if len(dfs) > 1:
+                df_combined = pd.concat(dfs, ignore_index=True)
+            else:
+                df_combined = dfs[0]
+
+            return df_combined
+        except Exception as e:
+            print(f"An error occurred while extracting the PDF: {e}")
+            return None
+    
+        

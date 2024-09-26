@@ -34,3 +34,43 @@ class DataCleaning:
 
         # Step 6: Finalize cleaning and return cleaned DataFrame
         return df_cleaned
+    
+    def clean_card_data(self, df):
+        """
+        Cleans card data by removing NULL values, correcting data types, and formatting errors.
+
+        Args:
+        df (pd.DataFrame): The card data DataFrame.
+
+        Returns:
+        pd.DataFrame: A cleaned DataFrame.
+        """
+        # Step 1: Drop rows with missing critical data like card number and expiry date
+        df_cleaned = df.dropna(subset=['card_number', 'expiry_date', 'card_provider', 'date_payment_confirmed'])
+        
+        # Step 2: Remove rows with invalid card numbers
+        # Assuming card numbers should be numeric and of length 16
+        df_cleaned['card_number'] = df_cleaned['card_number'].astype(str)  # Ensure card numbers are strings
+        df_cleaned = df_cleaned[df_cleaned['card_number'].str.isnumeric()]  # Keep only numeric card numbers
+        df_cleaned = df_cleaned[df_cleaned['card_number'].str.len() == 16]  # Keep only 16-digit card numbers
+        
+        # Step 3: Correct expiry date formatting (assuming MM/YY format)
+        df_cleaned['expiry_date'] = pd.to_datetime(df_cleaned['expiry_date'], errors='coerce', format='%m/%y')
+        df_cleaned = df_cleaned.dropna(subset=['expiry_date'])  # Drop rows where expiry_date is invalid
+        
+        # Step 4: Correct date_payment_confirmed formatting
+        df_cleaned['date_payment_confirmed'] = pd.to_datetime(df_cleaned['date_payment_confirmed'], errors='coerce')
+        df_cleaned = df_cleaned.dropna(subset=['date_payment_confirmed'])  # Drop rows where date_payment_confirmed is invalid
+        
+        # Step 5: Handle missing or incorrect card_provider values
+        # Fill missing card_provider values with 'Unknown' if necessary
+        df_cleaned['card_provider'] = df_cleaned['card_provider'].fillna('Unknown')
+
+        # Step 6: Remove duplicate card numbers if necessary
+        df_cleaned = df_cleaned.drop_duplicates(subset=['card_number'], keep='first')
+
+        # Return the cleaned DataFrame
+        return df_cleaned
+        
+
+    
