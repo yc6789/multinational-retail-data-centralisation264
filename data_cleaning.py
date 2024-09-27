@@ -165,6 +165,46 @@ class DataCleaning:
 
         # Return the cleaned DataFrame
         return df
+    
+    def clean_orders_data(self, df):
+        """
+        Cleans the orders data by removing unnecessary columns and preparing the table for database upload.
+
+        Args:
+        df (pd.DataFrame): The orders DataFrame.
+
+        Returns:
+        pd.DataFrame: The cleaned orders DataFrame ready for uploading to the database.
+        """
+        # Step 1: Remove the unnecessary columns 'level_0', 'index', 'first_name', 'last_name', and '1'
+        columns_to_remove = ['level_0', 'index', 'first_name', 'last_name', '1']
+        df_cleaned = df.drop(columns=[col for col in columns_to_remove if col in df.columns], errors='ignore')
+
+        # Step 2: Check and handle missing values in critical columns
+        # Critical columns: 'user_uuid', 'card_number', 'store_code', 'product_code', 'product_quantity'
+        critical_columns = ['user_uuid', 'card_number', 'store_code', 'product_code', 'product_quantity']
+        df_cleaned = df_cleaned.dropna(subset=critical_columns)
+
+        # Step 3: Ensure data types are consistent
+        df_cleaned['card_number'] = df_cleaned['card_number'].astype(str)  # Treat card number as a string (to avoid numeric issues)
+        df_cleaned['product_quantity'] = pd.to_numeric(df_cleaned['product_quantity'], errors='coerce')
+
+        # Step 4: Remove rows where 'product_quantity' is invalid (e.g., NaN or negative)
+        df_cleaned = df_cleaned[df_cleaned['product_quantity'] >= 0]
+
+        # Step 5: Drop duplicate rows if any, keeping the first occurrence
+        df_cleaned = df_cleaned.drop_duplicates()
+
+        # Step 6: Clean the column names (optional)
+        df_cleaned.columns = df_cleaned.columns.str.strip().str.lower().str.replace(' ', '_')
+
+        # Return the cleaned DataFrame
+        return df_cleaned
+
+
+
+        
+
 
         
         
