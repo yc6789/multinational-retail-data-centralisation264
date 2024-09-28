@@ -75,7 +75,8 @@ class DataCleaning:
     
     def clean_store_data(self, df):
         """
-        Cleans store data retrieved from the API by handling NULL values and correcting data types.
+        Cleans store data retrieved from the API by handling NULL values and correcting data types,
+        with special handling for 'Web Portal' stores to avoid deleting important records.
 
         Args:
         df (pd.DataFrame): The store data DataFrame.
@@ -87,13 +88,20 @@ class DataCleaning:
         df_cleaned = df.drop(columns=['index'], errors='ignore')
 
         # Drop rows with missing critical data
-        df_cleaned = df_cleaned.dropna(subset=['store_code', 'address', 'opening_date'])
+        df_cleaned = df_cleaned.dropna(subset=['store_code', 'opening_date'], how='any')
 
         # Convert date and numeric fields to appropriate types
         df_cleaned['opening_date'] = pd.to_datetime(df_cleaned['opening_date'], errors='coerce')
+        
+        # Convert latitude and longitude, but keep 'Web Portal' entries even if these values are missing
         df_cleaned['latitude'] = pd.to_numeric(df_cleaned['latitude'], errors='coerce')
         df_cleaned['longitude'] = pd.to_numeric(df_cleaned['longitude'], errors='coerce')
-        df_cleaned = df_cleaned.dropna(subset=['latitude', 'longitude'])
+
+        # Filter out rows where latitude and longitude are missing, but keep 'Web Portal' stores
+        df_cleaned = df_cleaned[
+            (df_cleaned['store_type'] == 'Web Portal') | 
+            (df_cleaned['latitude'].notnull() & df_cleaned['longitude'].notnull())
+        ]
 
         # Handle missing or invalid staff numbers
         df_cleaned['staff_numbers'] = pd.to_numeric(df_cleaned['staff_numbers'], errors='coerce')
@@ -112,6 +120,7 @@ class DataCleaning:
         df_cleaned = df_cleaned.drop_duplicates(subset=['store_code'], keep='first')
 
         return df_cleaned
+
     
     def convert_product_weights(self, df):
         """
