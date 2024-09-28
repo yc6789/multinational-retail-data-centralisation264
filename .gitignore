@@ -1,2 +1,10 @@
-db_creds.yaml
-db_creds2.yaml
+# Ignore database credential files
+db_cred.yaml
+db_cred2.yaml
+
+# Ignore Python bytecode files
+*.pyc
+__pycache__/
+
+# Ignore logs
+*.log
