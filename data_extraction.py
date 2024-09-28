@@ -181,6 +181,29 @@ class DataExtractor:
         except Exception as e:
             print(f"An error occurred while downloading the file from S3: {e}")
             return None
+    
+    def extract_json_from_s3(self, url):
+        """
+        Extracts JSON data from the provided S3 URL and returns it as a Pandas DataFrame.
+
+        Args:
+        url (str): The S3 URL of the JSON file.
+
+        Returns:
+        pd.DataFrame: The extracted JSON data as a Pandas DataFrame.
+        """
+        try:
+            response = requests.get(url)
+            response.raise_for_status()  # Check if the request was successful
+
+            # Load the JSON data into a Pandas DataFrame
+            json_data = response.json()
+            df = pd.json_normalize(json_data)
+            return df
+
+        except requests.exceptions.RequestException as e:
+            print(f"Error occurred while fetching the JSON file: {e}")
+            return None
 
 
 

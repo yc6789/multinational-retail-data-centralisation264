@@ -200,6 +200,44 @@ class DataCleaning:
 
         # Return the cleaned DataFrame
         return df_cleaned
+    
+
+    def clean_date_data(self, df):
+        """
+        Cleans the date data by selecting relevant timestamp columns, converting them to proper datetime format,
+        and ensuring consistency.
+
+        Args:
+        df (pd.DataFrame): The raw date data DataFrame.
+
+        Returns:
+        pd.DataFrame: The cleaned date data DataFrame.
+        """
+        # Step 1: Select the first 'timestamp' and 'date_uuid' columns
+        timestamp_cols = [col for col in df.columns if col.startswith('timestamp')]
+        date_uuid_cols = [col for col in df.columns if col.startswith('date_uuid')]
+
+        # Select the first occurrence of 'timestamp' and 'date_uuid'
+        if timestamp_cols and date_uuid_cols:
+            first_timestamp_col = timestamp_cols[0]  # Select the first 'timestamp' column (timestamp.0)
+            first_date_uuid_col = date_uuid_cols[0]  # Select the first 'date_uuid' column (date_uuid.0)
+
+            # Step 2: Convert the selected 'timestamp' column to datetime
+            df[first_timestamp_col] = pd.to_datetime(df[first_timestamp_col], errors='coerce')
+
+            # Step 3: Drop rows where the timestamp is missing
+            df_cleaned = df.dropna(subset=[first_timestamp_col])
+
+            # Step 4: Keep only relevant columns (timestamp and date_uuid)
+            df_cleaned = df_cleaned[[first_timestamp_col, first_date_uuid_col]]
+
+            # Step 5: Rename columns for clarity
+            df_cleaned.columns = ['timestamp', 'date_uuid']
+
+            return df_cleaned
+        else:
+            print("No valid 'timestamp' or 'date_uuid' columns found in the DataFrame.")
+            return df
 
 
 
