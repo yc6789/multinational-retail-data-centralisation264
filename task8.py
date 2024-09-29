@@ -1,3 +1,4 @@
+# %%
 from data_extraction import DataExtractor
 from data_cleaning import DataCleaning
 from data_utils import DatabaseConnector
@@ -10,8 +11,8 @@ db_connector = DatabaseConnector()
 # Step 1: Extract JSON data from the S3 link
 json_url = 'https://data-handling-public.s3.eu-west-1.amazonaws.com/date_details.json'
 date_df = extractor.extract_json_from_s3(json_url)
-print(date_df.columns)
 
+# %%
 # Step 2: Clean the extracted date data
 if date_df is not None:
     cleaned_date_df = cleaner.clean_date_data(date_df)
@@ -26,3 +27,4 @@ if date_df is not None:
         print("Failed to initialize the database engine.")
 else:
     print("Failed to extract JSON data from S3.")
+# %%

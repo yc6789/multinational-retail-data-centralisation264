@@ -132,7 +132,7 @@ class DataExtractor:
 
     def extract_json_from_s3(self, url):
         """
-        Downloads JSON data from a URL and returns it as a Pandas DataFrame.
+        Downloads JSON data from a URL and returns it as a reshaped Pandas DataFrame.
 
         Args:
         url (str): URL of the JSON file.
@@ -143,7 +143,14 @@ class DataExtractor:
         try:
             response = requests.get(url)
             response.raise_for_status()
-            return pd.json_normalize(response.json())
+            json_data = response.json()  # Get the raw JSON data
+            
+            # Convert the nested dictionary to a DataFrame
+            df = pd.DataFrame.from_dict(json_data)
+            
+            return df
         except requests.exceptions.RequestException as e:
             print(f"Error during JSON download: {e}")
+        except ValueError as e:
+            print(f"Error processing JSON: {e}")
         return None

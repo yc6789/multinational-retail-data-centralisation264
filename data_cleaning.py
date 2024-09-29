@@ -1,5 +1,6 @@
 import pandas as pd
 import re
+import uuid
 
 class DataCleaning:
     def clean_user_data(self, df):
@@ -153,6 +154,58 @@ class DataCleaning:
         df['weight'] = df['weight'].apply(convert_weight)
         return df
     
+    def clean_products_data(self, df):
+        """
+        Cleans the product data by handling missing values, correcting data types, and removing erroneous entries.
+
+        Args:
+        df (pd.DataFrame): The raw product data DataFrame.
+
+        Returns:
+        pd.DataFrame: The cleaned product data.
+        """
+
+        # Step 1: Drop unnecessary columns
+        df_cleaned = df.drop(columns=['Unnamed: 0'], errors='ignore')
+
+        # Step 2: Handle missing values
+        # Drop rows where critical fields are missing: product_name, product_price, category, EAN, date_added, uuid
+        critical_columns = ['product_name', 'product_price', 'category', 'EAN', 'date_added', 'uuid', 'product_code']
+        df_cleaned = df_cleaned.dropna(subset=critical_columns)
+
+        # Step 3: Clean and convert product_price to numeric (removing non-numeric characters, e.g., currency symbols)
+        df_cleaned['product_price'] = df_cleaned['product_price'].replace({'£': '', ',': ''}, regex=True)
+        df_cleaned['product_price'] = pd.to_numeric(df_cleaned['product_price'], errors='coerce')
+
+        # Step 4: Convert 'date_added' to datetime
+        df_cleaned['date_added'] = pd.to_datetime(df_cleaned['date_added'], errors='coerce')
+
+        # Step 5: Ensure 'uuid' is a valid UUID or set to NaN for invalid UUIDs
+        def validate_uuid(val):
+            try:
+                return str(uuid.UUID(val))
+            except ValueError:
+                return None
+
+        df_cleaned['uuid'] = df_cleaned['uuid'].apply(validate_uuid)
+
+        # Step 6: Convert 'removed' column to boolean
+        df_cleaned['removed'] = df_cleaned['removed'].map({'Still_avaliable': True, 'Removed': False})
+
+        # Step 7: Ensure 'weight' is numeric, and handle missing or invalid weights (set to NaN if invalid)
+        df_cleaned['weight'] = pd.to_numeric(df_cleaned['weight'], errors='coerce')
+
+        # Step 8: Remove any remaining rows where critical numeric columns
+        df_cleaned = df_cleaned.dropna(subset=['product_price', 'weight'])
+
+        # Step 9: Drop duplicates based on 'product_code' (keeping the first occurrence)
+        df_cleaned = df_cleaned.drop_duplicates(subset=['product_code'], keep='first')
+
+        # Step 10: Return the cleaned DataFrame
+        return df_cleaned
+
+        
+    
     def clean_orders_data(self, df):
         """
         Cleans orders data by removing unnecessary columns and ensuring consistency in data types.
@@ -186,7 +239,7 @@ class DataCleaning:
 
     def clean_date_data(self, df):
         """
-        Cleans date data by converting timestamps and ensuring data consistency.
+        Cleans the date data by reshaping, converting data types, and handling missing values.
 
         Args:
         df (pd.DataFrame): The raw date data DataFrame.
@@ -194,21 +247,25 @@ class DataCleaning:
         Returns:
         pd.DataFrame: The cleaned date data DataFrame.
         """
-        # Select and clean relevant columns
-        timestamp_cols = [col for col in df.columns if col.startswith('timestamp')]
-        date_uuid_cols = [col for col in df.columns if col.startswith('date_uuid')]
+        # Step 1: Convert 'timestamp' into a proper datetime object by combining it with day, month, and year.
+        df['timestamp'] = pd.to_datetime(df[['year', 'month', 'day']].astype(str).agg('-'.join, axis=1) + ' ' + df['timestamp'], errors='coerce')
+        
+        # Step 2: Ensure 'month', 'year', and 'day' are numeric values
+        df['month'] = pd.to_numeric(df['month'], errors='coerce')
+        df['year'] = pd.to_numeric(df['year'], errors='coerce')
+        df['day'] = pd.to_numeric(df['day'], errors='coerce')
+        
+        # Step 3: Handle missing or invalid timestamp (drop rows where timestamp conversion failed)
+        df_cleaned = df.dropna(subset=['timestamp'])
 
-        if timestamp_cols and date_uuid_cols:
-            first_timestamp_col = timestamp_cols[0]
-            first_date_uuid_col = date_uuid_cols[0]
+        # Step 4: Check and handle missing values for 'time_period' (if any), fill with 'Unknown' if needed
+        df_cleaned['time_period'] = df_cleaned['time_period'].fillna('Unknown')
 
-            df[first_timestamp_col] = pd.to_datetime(df[first_timestamp_col], errors='coerce')
-            df_cleaned = df.dropna(subset=[first_timestamp_col])
+        # Step 5: Ensure 'date_uuid' is treated as a proper string
+        df_cleaned['date_uuid'] = df_cleaned['date_uuid'].astype(str)
 
-            df_cleaned = df_cleaned[[first_timestamp_col, first_date_uuid_col]]
-            df_cleaned.columns = ['timestamp', 'date_uuid']
+        # Step 6: Drop unnecessary columns if any exist
+        df_cleaned.reset_index(drop=True, inplace=True)
 
-            return df_cleaned
-        else:
-            print("No valid 'timestamp' or 'date_uuid' columns found.")
-            return df
+        # Return the cleaned DataFrame
+        return df_cleaned
