@@ -1,3 +1,4 @@
+# %%
 from data_extraction import DataExtractor
 from data_cleaning import DataCleaning
 from data_utils import DatabaseConnector
@@ -17,6 +18,7 @@ orders_df.head()
 cleaner = DataCleaning()
 cleaned_order_df = cleaner.clean_orders_data(orders_df)
 
+# %%
 sd_connector = DatabaseConnector()
 
 engine = sd_connector.init_db_engine('db_cred2.yaml') 

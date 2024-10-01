@@ -6,41 +6,35 @@ class DataCleaning:
     def clean_user_data(self, df):
         """
         Cleans user data by handling NULL values, validating data types, and removing invalid entries.
-        
+
         Args:
         df (pd.DataFrame): The user data DataFrame.
 
         Returns:
         pd.DataFrame: A cleaned DataFrame.
         """
-        # Handle NULL values in critical columns
+
+        # Step 1: Handle NULL values in critical columns
         df_cleaned = df.dropna(subset=['first_name', 'last_name', 'email_address', 'join_date', 'date_of_birth'])
 
-        # Correct date columns
-        df_cleaned['join_date'] = pd.to_datetime(df_cleaned['join_date'], errors='coerce')
-        df_cleaned['date_of_birth'] = pd.to_datetime(df_cleaned['date_of_birth'], errors='coerce')
+        # Step 2: Correct date columns
+        df_cleaned['join_date'] = pd.to_datetime(df_cleaned['join_date'], errors='coerce', infer_datetime_format=True, format='mixed')
+        df_cleaned['date_of_birth'] = pd.to_datetime(df_cleaned['date_of_birth'], errors='coerce', infer_datetime_format=True, format='mixed')
 
-        # Drop rows where dates are invalid
+        # Step 3: Drop rows where dates are invalid
         df_cleaned = df_cleaned.dropna(subset=['join_date', 'date_of_birth'])
 
-        # Validate email format using regex
-        df_cleaned = df_cleaned[df_cleaned['email_address'].str.contains(r'^[\w\.-]+@[\w\.-]+\.\w+$', regex=True, na=False)]
+        # Step 4: Validate email format using regex
+        #df_cleaned = df_cleaned[df_cleaned['email_address'].str.contains(r'^[\w\.-]+@[\w\.-]+\.\w+$', regex=True, na=False)]
 
-        # Clean phone number by removing non-numeric characters
+        # Step 5: Clean phone number by removing non-numeric characters
         df_cleaned['phone_number'] = df_cleaned['phone_number'].str.replace(r'\D', '', regex=True)
 
-        # Filter out invalid age entries
-        current_year = pd.Timestamp.now().year
-        df_cleaned['age'] = current_year - df_cleaned['date_of_birth'].dt.year
-        df_cleaned = df_cleaned[(df_cleaned['age'] >= 0) & (df_cleaned['age'] <= 120)]  # Assuming max age is 120
-
-        # Remove duplicates
+        # Step 6: Remove duplicates
         df_cleaned = df_cleaned.drop_duplicates(subset=['email_address', 'user_uuid'], keep='first')
 
-        # Drop age column used for filtering
-        df_cleaned = df_cleaned.drop(columns=['age'])
-
         return df_cleaned
+
     
     def clean_card_data(self, df):
         """

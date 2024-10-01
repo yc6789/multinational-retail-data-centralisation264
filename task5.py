@@ -1,3 +1,4 @@
+# %%
 from data_extraction import DataExtractor
 from data_cleaning import DataCleaning
 from data_utils import DatabaseConnector
@@ -8,15 +9,15 @@ num_stores = 'https://aqj7u5id95.execute-api.eu-west-1.amazonaws.com/prod/number
 
 extractor = DataExtractor()
 
+# %%
 num_stores = extractor.list_number_of_stores(num_stores,dict)
 store_df = extractor.retrieve_stores_data(retrieve_store_api,num_stores,dict)
-print(store_df.head())
-print(store_df.info())
-print(store_df.describe())
 
+# %%
 cleaner = DataCleaning()
 cleaned_store_df = cleaner.clean_store_data(store_df)
 
+# %%
 sd_connector = DatabaseConnector()
 
 engine = sd_connector.init_db_engine('db_cred2.yaml') 
@@ -27,4 +28,3 @@ if upload_status:
     print("Data successfully uploaded to the 'dim_store_details' table.")
 else:
     print("Data upload to 'dim_store_details' failed.")
-
