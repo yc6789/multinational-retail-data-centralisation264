@@ -17,6 +17,7 @@ orders_df.head()
 
 cleaner = DataCleaning()
 cleaned_order_df = cleaner.clean_orders_data(orders_df)
+cleaned_order_df.info()
 
 # %%
 sd_connector = DatabaseConnector()

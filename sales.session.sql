@@ -152,7 +152,7 @@ SELECT MAX(LENGTH(card_number)) AS max_card_number_length, --16
 FROM dim_card_details;
 
 ALTER TABLE dim_card_details
-ALTER COLUMN card_number TYPE VARCHAR(16),
+ALTER COLUMN card_number TYPE VARCHAR(19),
 ALTER COLUMN expiry_date TYPE VARCHAR(19) USING expiry_date::TEXT,
 ALTER COLUMN date_payment_confirmed TYPE DATE USING date_payment_confirmed::DATE;
 
