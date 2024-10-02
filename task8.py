@@ -27,4 +27,3 @@ if date_df is not None:
         print("Failed to initialize the database engine.")
 else:
     print("Failed to extract JSON data from S3.")
-# %%
