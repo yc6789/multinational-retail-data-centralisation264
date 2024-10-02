@@ -209,9 +209,9 @@ FOREIGN KEY (product_code)
 REFERENCES dim_products(product_code)
 ON DELETE CASCADE;
 
-SELECT DISTINCT store_code
+SELECT DISTINCT product_code
 FROM orders_table
-WHERE store_code NOT IN (SELECT store_code FROM dim_store_details);
+WHERE product_code NOT IN (SELECT product_code FROM dim_products);
 
 SELECT * FROM dim_users
 WHERE user_uuid NOT IN (SELECT user_uuid FROM orders_table)

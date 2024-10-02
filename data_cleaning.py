@@ -123,33 +123,53 @@ class DataCleaning:
     
     def convert_product_weights(self, df):
         """
-        Converts weights in the products DataFrame to kilograms.
-        
+        Converts weights in the products DataFrame to kilograms, including handling for multi-pack weights.
+
         Args:
         df (pd.DataFrame): The products DataFrame containing a 'weight' column.
 
         Returns:
         pd.DataFrame: A cleaned DataFrame with the 'weight' column in kilograms.
         """
+
+        # Define conversion factors to kilograms, including 'oz' (ounces)
+        unit_conversion = {
+            'g': 1 / 1000,  # grams to kilograms
+            'kg': 1,        # kilograms to kilograms (no conversion)
+            'ml': 1 / 1000,  # milliliters to kilograms (assuming water-like density)
+            'l': 1,         # liters to kilograms (assuming water-like density)
+            'oz': 0.0283495  # ounces to kilograms
+        }
+
         def convert_weight(value):
+            
             if pd.isnull(value):
                 return None
+            
             value = value.strip().lower()
-            weight_match = re.match(r"(\d+\.?\d*)\s*(g|kg|ml|l)", value)
+
+            # Handle cases like "16 x 10g"
+            multi_weight_match = re.match(r"(\d+)\s*x\s*(\d+\.?\d*)\s*(g|kg|ml|l|oz)", value)
+            if multi_weight_match:
+                quantity = int(multi_weight_match.group(1))  # Number of items
+                weight_per_item = float(multi_weight_match.group(2))  # Weight of each item
+                unit = multi_weight_match.group(3)
+
+                return quantity * weight_per_item * unit_conversion.get(unit, 1)
+
+            # Handle simple cases like "500g", "2kg", "16oz"
+            weight_match = re.match(r"(\d+\.?\d*)\s*(g|kg|ml|l|oz)", value)
             if weight_match:
                 weight = float(weight_match.group(1))
                 unit = weight_match.group(2)
-                if unit == 'g':
-                    return weight / 1000
-                elif unit == 'kg':
-                    return weight
-                elif unit == 'ml':
-                    return weight / 1000
-                elif unit == 'l':
-                    return weight
+
+                return weight * unit_conversion.get(unit, 1)
+
             return None
 
+        # Apply the conversion function to the 'weight' column
         df['weight'] = df['weight'].apply(convert_weight)
+
         return df
     
     def clean_products_data(self, df):
@@ -176,16 +196,7 @@ class DataCleaning:
         df_cleaned['product_price'] = pd.to_numeric(df_cleaned['product_price'], errors='coerce')
 
         # Step 4: Convert 'date_added' to datetime
-        df_cleaned['date_added'] = pd.to_datetime(df_cleaned['date_added'], errors='coerce')
-
-        # Step 5: Ensure 'uuid' is a valid UUID or set to NaN for invalid UUIDs
-        def validate_uuid(val):
-            try:
-                return str(uuid.UUID(val))
-            except ValueError:
-                return None
-
-        df_cleaned['uuid'] = df_cleaned['uuid'].apply(validate_uuid)
+        df_cleaned['date_added'] = pd.to_datetime(df_cleaned['date_added'], errors='coerce',infer_datetime_format=True,format='mixed')
 
         # Step 6: Convert 'removed' column to boolean
         df_cleaned['removed'] = df_cleaned['removed'].map({'Still_avaliable': True, 'Removed': False})

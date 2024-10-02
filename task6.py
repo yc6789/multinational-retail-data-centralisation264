@@ -14,6 +14,17 @@ cleaned_product_df = cleaner.convert_product_weights(product_df)
 
 # %%
 cleaned_product_df = cleaner.clean_products_data(cleaned_product_df)
+
+# %%
+cleaned_product_df.info()
+
+# %%
+import pandas as pd
+target = pd.read_csv('removed_product.csv')
+
+# %%
+filtered_df = pd.merge(cleaned_product_df, target, on='product_code', how='inner')
+filtered_df
 # %%
 # Uploading to database
 sd_connector = DatabaseConnector()
@@ -26,3 +37,4 @@ if upload_status:
     print("Data successfully uploaded to the 'dim_products' table.")
 else:
     print("Data upload to 'dim_products' failed.")
+# %%
