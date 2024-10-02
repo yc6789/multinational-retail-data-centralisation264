@@ -16,7 +16,7 @@ store_df = extractor.retrieve_stores_data(retrieve_store_api,num_stores,dict)
 # %%
 cleaner = DataCleaning()
 cleaned_store_df = cleaner.clean_store_data(store_df)
-
+cleaned_store_df.info()
 # %%
 sd_connector = DatabaseConnector()
 

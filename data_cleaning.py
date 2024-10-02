@@ -86,9 +86,12 @@ class DataCleaning:
         df_cleaned = df_cleaned.dropna(subset=['store_code', 'opening_date'], how='any')
 
         # Convert date and numeric fields to appropriate types
-        df_cleaned['opening_date'] = pd.to_datetime(df_cleaned['opening_date'], errors='coerce')
+        df_cleaned['opening_date'] = pd.to_datetime(df_cleaned['opening_date'], errors='coerce', infer_datetime_format=True,format='mixed')
         
         # Convert latitude and longitude, but keep 'Web Portal' entries even if these values are missing
+        df_cleaned['latitude'] = df_cleaned['latitude'].astype(str).apply(lambda x: x.replace('?', ''))
+        df_cleaned['longitude'] = df_cleaned['longitude'].astype(str).apply(lambda x: x.replace('?', ''))
+        
         df_cleaned['latitude'] = pd.to_numeric(df_cleaned['latitude'], errors='coerce')
         df_cleaned['longitude'] = pd.to_numeric(df_cleaned['longitude'], errors='coerce')
 
@@ -99,6 +102,7 @@ class DataCleaning:
         ]
 
         # Handle missing or invalid staff numbers
+        df_cleaned['staff_numbers'] = df_cleaned['staff_numbers'].astype(str).apply(lambda x: re.sub(r'\D', '', x))
         df_cleaned['staff_numbers'] = pd.to_numeric(df_cleaned['staff_numbers'], errors='coerce')
         df_cleaned = df_cleaned[df_cleaned['staff_numbers'] >= 0]
 
@@ -108,8 +112,8 @@ class DataCleaning:
         df_cleaned['continent'] = df_cleaned['continent'].str.strip()
 
         # Fill lat column using latitude if missing
-        if 'lat' in df_cleaned.columns:
-            df_cleaned['lat'] = df_cleaned['lat'].fillna(df_cleaned['latitude'])
+        #if 'lat' in df_cleaned.columns:
+        #    df_cleaned['lat'] = df_cleaned['lat'].fillna(df_cleaned['latitude'])
 
         # Remove duplicates based on store_code
         df_cleaned = df_cleaned.drop_duplicates(subset=['store_code'], keep='first')

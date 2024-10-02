@@ -4,6 +4,7 @@ import tabula
 import requests
 import boto3
 from io import StringIO
+import time
 
 
 class DataExtractor:
@@ -86,7 +87,7 @@ class DataExtractor:
             print(f"Error during API request: {e}")
         return None
 
-    def retrieve_stores_data(self, store_endpoint_url, number_of_stores, headers=None):
+    def retrieve_stores_data(self, store_endpoint_url, number_of_stores, headers=None, max_retries=3, delay=2):
         """
         Fetches store details for the given number of stores.
 
@@ -94,19 +95,40 @@ class DataExtractor:
         store_endpoint_url (str): API endpoint template to fetch store details (uses '{store_number}' as a placeholder).
         number_of_stores (int): Number of stores to retrieve data for.
         headers (dict): Optional headers for the API request.
+        max_retries (int): Number of retries before giving up on a failed request (default 3).
+        delay (int): Delay in seconds between retries (default 2 seconds).
 
         Returns:
-        pd.DataFrame: DataFrame containing store details, or None if an error occurs.
+        pd.DataFrame: DataFrame containing store details, or None if no stores could be retrieved.
         """
         stores_data = []
+
         for store_number in range(number_of_stores):
-            try:
-                store_url = store_endpoint_url.format(store_number=store_number)
-                response = requests.get(store_url, headers=headers)
-                response.raise_for_status()
-                stores_data.append(response.json())
-            except requests.exceptions.RequestException as e:
-                print(f"Error retrieving store {store_number}: {e}")
+            retries = 0
+            while retries < max_retries:
+                try:
+                    # Format the store URL and make the API request
+                    store_url = store_endpoint_url.format(store_number=store_number)
+                    response = requests.get(store_url, headers=headers)
+                    response.raise_for_status()  # Raise an HTTPError for bad responses (4xx or 5xx)
+                    
+                    # Append the JSON data to the list
+                    stores_data.append(response.json())
+                    break  # Break the retry loop if successful
+
+                except requests.exceptions.RequestException as e:
+                    retries += 1
+                    print(f"Error retrieving store {store_number} (Attempt {retries}/{max_retries}): {e}")
+                    
+                    # Retry after a short delay
+                    time.sleep(delay)
+
+                    if retries == max_retries:
+                        print(f"Failed to retrieve store {store_number} after {max_retries} attempts.")
+                    else:
+                        print(f"Retrying store {store_number}...")
+
+        # Return the collected store data as a DataFrame or None if no data could be retrieved
         return pd.DataFrame(stores_data) if stores_data else None
 
     def extract_from_s3(self, s3_address):
