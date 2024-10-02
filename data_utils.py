@@ -137,7 +137,7 @@ class DatabaseConnector:
         
         try:
             # Upload DataFrame to the specified table
-            df.to_sql(table_name, con=engine, if_exists='append', index=False)
+            df.to_sql(table_name, con=engine, if_exists='replace', index=False)
             logging.info(f"Data successfully uploaded to the '{table_name}' table.")
             return True
         

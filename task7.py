@@ -29,3 +29,4 @@ if upload_status:
     print("Data successfully uploaded to the 'orders_table' table.")
 else:
     print("Data upload to 'orders_table' failed.")
+# %%

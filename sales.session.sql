@@ -209,7 +209,7 @@ FOREIGN KEY (product_code)
 REFERENCES dim_products(product_code)
 ON DELETE CASCADE;
 
-SELECT card_number 
+SELECT *
 FROM orders_table
 WHERE card_number NOT IN (SELECT card_number FROM dim_card_details);
 

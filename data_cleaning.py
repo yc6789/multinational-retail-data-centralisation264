@@ -49,15 +49,15 @@ class DataCleaning:
         # Drop rows with critical missing data
         df_cleaned = df.dropna(subset=['card_number', 'expiry_date', 'card_provider', 'date_payment_confirmed'])
 
-        # Ensure card numbers are numeric and of valid length
-        df_cleaned['card_number'] = df_cleaned['card_number'].astype(str)
+        # Ensure card numbers are numeric
+        df_cleaned['card_number'] = df_cleaned['card_number'].astype(str).apply(lambda x: x.replace('?', ''))
         df_cleaned = df_cleaned[df_cleaned['card_number'].str.isnumeric()]
-        df_cleaned = df_cleaned[df_cleaned['card_number'].str.len() == 16]
+
 
         # Convert expiry date and payment date to datetime
         df_cleaned['expiry_date'] = pd.to_datetime(df_cleaned['expiry_date'], errors='coerce', format='%m/%y')
         df_cleaned = df_cleaned.dropna(subset=['expiry_date'])
-        df_cleaned['date_payment_confirmed'] = pd.to_datetime(df_cleaned['date_payment_confirmed'], errors='coerce')
+        df_cleaned['date_payment_confirmed'] = pd.to_datetime(df_cleaned['date_payment_confirmed'], errors='coerce',infer_datetime_format=True,format='mixed')
         df_cleaned = df_cleaned.dropna(subset=['date_payment_confirmed'])
 
         # Fill missing card_provider with 'Unknown'
@@ -220,11 +220,13 @@ class DataCleaning:
 
         # Convert numeric columns and ensure product quantity is valid
         df_cleaned['card_number'] = df_cleaned['card_number'].astype(str)
+        df_cleaned = df_cleaned[df_cleaned['card_number'].str.isnumeric()]
+    
         df_cleaned['product_quantity'] = pd.to_numeric(df_cleaned['product_quantity'], errors='coerce')
         df_cleaned = df_cleaned[df_cleaned['product_quantity'] >= 0]
 
         # Remove duplicates
-        df_cleaned = df_cleaned.drop_duplicates()
+        # df_cleaned = df_cleaned.drop_duplicates()
 
         # Clean and standardize column names
         df_cleaned.columns = df_cleaned.columns.str.strip().str.lower().str.replace(' ', '_')
