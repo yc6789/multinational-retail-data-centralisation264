@@ -69,7 +69,7 @@ The data is extracted, cleaned, and uploaded into a PostgreSQL database using a 
 5. **Run the ETL Process**:
    Once everything is set up, you can run the main ETL process:
    ```bash
-   python task8.py
+   python main.py
    ```
 
 ## Functionality
@@ -101,7 +101,7 @@ The `DatabaseConnector` class manages database interactions:
 - **Upload Data to the Database**: The `upload_to_db` method uploads cleaned data to the PostgreSQL database, ensuring that tables are properly formatted for insertion.
 
 ### Key Files
-- **task8.py**: The main script that orchestrates the entire ETL process.
+- **main.py**: The main script that orchestrates the entire ETL process.
 - **data_extraction.py**: Contains the `DataExtractor` class for extracting data from various sources.
 - **data_cleaning.py**: Contains the `DataCleaning` class for cleaning data.
 - **data_utils.py**: Contains the `DatabaseConnector` class and utility functions for database interactions.
@@ -110,9 +110,9 @@ The `DatabaseConnector` class manages database interactions:
 
 The cleaned data is uploaded to the database using a star schema structure. The schema is organized as follows:
 
-1. **Fact Table**: The central `orders` table contains transaction-level data.
+1. **Fact Table**: The central `orders_table` contains transaction-level data.
 2. **Dimension Tables**:
-   - **dim_stores**: Contains store-level details.
+   - **dim_store_details**: Contains store-level details.
    - **dim_products**: Contains product-level details.
    - **dim_date_times**: Contains timestamp and date information for each transaction.
 
